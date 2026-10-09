@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "https://meshpay-demo.onrender.com/$1" }
+  ]
+}
