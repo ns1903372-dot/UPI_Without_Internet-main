@@ -49,7 +49,27 @@ public class ApiController {
      * and inject it into the mesh at the given device.
      */
     @PostMapping("/demo/send")
-    public ResponseEntity<?> demoSend(@RequestBody DemoSendRequest req) throws Exception {
+    public ResponseEntity<?> demoSend(@RequestBody(required = false) DemoSendRequest req) throws Exception {
+        if (req == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Payment details are required."));
+        }
+        if (req.senderVpa == null || req.receiverVpa == null || req.senderVpa.isBlank()
+                || req.receiverVpa.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Choose a sender and a receiver."));
+        }
+        if (req.senderVpa.equals(req.receiverVpa)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Sender and receiver must be different accounts."));
+        }
+        if (req.amount == null || req.amount.signum() <= 0) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Amount must be greater than zero."));
+        }
+        if (req.pin == null || req.pin.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Enter the demo PIN."));
+        }
+        if (!accountRepo.existsById(req.senderVpa) || !accountRepo.existsById(req.receiverVpa)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Select valid demo accounts."));
+        }
+
         MeshPacket packet = demo.createPacket(
                 req.senderVpa, req.receiverVpa, req.amount, req.pin,
                 req.ttl == null ? 5 : req.ttl);
